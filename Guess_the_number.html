@@ -20,6 +20,21 @@
 
 		* { box-sizing: border-box; }
 
+		.home-link {
+			display: none;
+			min-height: 40px;
+			align-items: center;
+			gap: 8px;
+			padding: 0 11px;
+			border: 1px solid #becdc0;
+			border-radius: 5px;
+			background: #fffefa;
+			color: var(--green-dark);
+			font-size: 13px;
+			font-weight: 700;
+			text-decoration: none;
+		}
+
 		body {
 			min-height: 100vh;
 			margin: 0;
@@ -199,12 +214,17 @@
 			.submit { flex-basis: 94px; }
 		}
 
+		@media (max-width: 760px) {
+			.home-link { display: inline-flex; }
+		}
+
 		@media (prefers-reduced-motion: reduce) {
 			*, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 		}
 	</style>
 </head>
 <body>
+	<a class="home-link" href="index.html">← 返回游戏菜单</a>
 	<main>
 		<div class="topline"><span>NUMBER GAME / 01</span><span class="status-dot" aria-hidden="true"></span></div>
 		<section class="content" aria-labelledby="title">
