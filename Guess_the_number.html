@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#f2f5ef">
+	<title>猜个数字</title>
+	<style>
+		:root {
+			color-scheme: light;
+			--ink: #17241e;
+			--muted: #64736a;
+			--paper: #f2f5ef;
+			--panel: #fffefa;
+			--green: #176b4b;
+			--green-dark: #10553b;
+			--line: #dce5dc;
+			--orange: #e87945;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			min-height: 100vh;
+			margin: 0;
+			display: grid;
+			place-items: center;
+			padding: 28px 18px;
+			color: var(--ink);
+			background-color: var(--paper);
+			background-image: radial-gradient(#cbd8cc 0.8px, transparent 0.8px);
+			background-size: 19px 19px;
+			font-family: "Trebuchet MS", "Microsoft YaHei", sans-serif;
+		}
+
+		main {
+			width: min(100%, 440px);
+			overflow: hidden;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: var(--panel);
+			box-shadow: 0 18px 55px rgb(26 56 39 / 10%);
+			animation: arrive 420ms ease-out both;
+		}
+
+		.topline {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 18px 24px;
+			border-bottom: 1px solid var(--line);
+			color: var(--muted);
+			font-size: 12px;
+			font-weight: 700;
+			letter-spacing: 1.2px;
+			text-transform: uppercase;
+		}
+
+		.status-dot {
+			width: 9px;
+			height: 9px;
+			border-radius: 50%;
+			background: #45a875;
+			box-shadow: 0 0 0 4px #e4f2e9;
+		}
+
+		.content { padding: 34px 32px 30px; }
+
+		.eyebrow {
+			margin: 0 0 8px;
+			color: var(--green);
+			font-size: 13px;
+			font-weight: 700;
+		}
+
+		h1 {
+			margin: 0;
+			font-family: Georgia, "Songti SC", serif;
+			font-size: clamp(32px, 9vw, 42px);
+			line-height: 1.15;
+			letter-spacing: 0;
+		}
+
+		.intro {
+			margin: 12px 0 26px;
+			color: var(--muted);
+			font-size: 15px;
+			line-height: 1.7;
+		}
+
+		form { display: grid; gap: 12px; }
+
+		label {
+			color: var(--ink);
+			font-size: 13px;
+			font-weight: 700;
+		}
+
+		.entry-row { display: flex; gap: 10px; }
+
+		input {
+			width: 100%;
+			min-width: 0;
+			height: 54px;
+			padding: 0 16px;
+			border: 1px solid #becdc0;
+			border-radius: 5px;
+			outline: none;
+			background: #fff;
+			color: var(--ink);
+			font: inherit;
+			font-size: 19px;
+			transition: border-color 150ms ease, box-shadow 150ms ease;
+		}
+
+		input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #dcefe3; }
+		input:disabled { background: #f3f5f1; color: var(--muted); }
+
+		button {
+			min-height: 48px;
+			border: 0;
+			border-radius: 5px;
+			font: inherit;
+			font-weight: 700;
+			cursor: pointer;
+			transition: background-color 150ms ease, transform 150ms ease;
+		}
+
+		button:active:not(:disabled) { transform: translateY(1px); }
+
+		.submit {
+			flex: 0 0 112px;
+			height: 54px;
+			background: var(--green);
+			color: white;
+		}
+
+		.submit:hover:not(:disabled) { background: var(--green-dark); }
+		button:disabled { cursor: not-allowed; opacity: 0.55; }
+
+		.feedback {
+			min-height: 52px;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-top: 20px;
+			padding: 12px 14px;
+			border-radius: 5px;
+			background: #f1f5ef;
+			color: var(--muted);
+			font-size: 14px;
+			line-height: 1.5;
+		}
+
+		.feedback::before {
+			width: 7px;
+			height: 7px;
+			flex: 0 0 7px;
+			border-radius: 50%;
+			background: #9baa9e;
+			content: "";
+		}
+
+		.feedback[data-state="high"], .feedback[data-state="low"] { color: #a64e2a; background: #fff1e9; }
+		.feedback[data-state="high"]::before, .feedback[data-state="low"]::before { background: var(--orange); }
+		.feedback[data-state="won"] { color: var(--green-dark); background: #e9f4ec; }
+		.feedback[data-state="won"]::before { background: #45a875; }
+
+		.bottomline {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin-top: 22px;
+			padding-top: 19px;
+			border-top: 1px solid var(--line);
+		}
+
+		.attempts { color: var(--muted); font-size: 13px; }
+		.attempts strong { color: var(--ink); font-size: 16px; }
+
+		.restart {
+			min-height: 40px;
+			padding: 0 13px;
+			background: transparent;
+			color: var(--green);
+		}
+
+		.restart:hover:not(:disabled) { background: #e9f4ec; }
+
+		@keyframes arrive {
+			from { opacity: 0; transform: translateY(8px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
+
+		@media (max-width: 380px) {
+			.content { padding: 28px 21px 23px; }
+			.topline { padding-inline: 21px; }
+			.submit { flex-basis: 94px; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<div class="topline"><span>NUMBER GAME / 01</span><span class="status-dot" aria-hidden="true"></span></div>
+		<section class="content" aria-labelledby="title">
+			<p class="eyebrow">准备好了吗？</p>
+			<h1 id="title">猜个数字</h1>
+			<p class="intro">我已经想好了一个 1 到 100 之间的数字。试着把它找出来。</p>
+
+			<form id="guess-form">
+				<label for="guess">你的猜测</label>
+				<div class="entry-row">
+					<input id="guess" name="guess" type="number" min="1" max="100" step="1" inputmode="numeric" placeholder="1 – 100" required autocomplete="off">
+					<button class="submit" type="submit">猜一下</button>
+				</div>
+			</form>
+
+			<div id="feedback" class="feedback" role="status" aria-live="polite">输入一个数字，开始挑战。</div>
+
+			<div class="bottomline">
+				<div class="attempts">已猜次数：<strong id="attempt-count">0</strong></div>
+				<button id="restart" class="restart" type="button" disabled>重新开始</button>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		const form = document.querySelector("#guess-form");
+		const input = document.querySelector("#guess");
+		const feedback = document.querySelector("#feedback");
+		const attemptCount = document.querySelector("#attempt-count");
+		const restartButton = document.querySelector("#restart");
+		const submitButton = form.querySelector("button[type='submit']");
+
+		let answer;
+		let attempts;
+		let finished;
+
+		function startGame() {
+			answer = Math.floor(Math.random() * 100) + 1;
+			attempts = 0;
+			finished = false;
+			attemptCount.textContent = "0";
+			feedback.textContent = "输入一个数字，开始挑战。";
+			feedback.dataset.state = "ready";
+			input.disabled = false;
+			submitButton.disabled = false;
+			restartButton.disabled = true;
+			input.value = "";
+			input.focus();
+		}
+
+		form.addEventListener("submit", (event) => {
+			event.preventDefault();
+			if (finished || !input.reportValidity()) return;
+
+			const guess = Number(input.value);
+			if (!Number.isInteger(guess) || guess < 1 || guess > 100) {
+				input.setCustomValidity("请输入 1 到 100 之间的整数。");
+				input.reportValidity();
+				input.setCustomValidity("");
+				return;
+			}
+
+			attempts += 1;
+			attemptCount.textContent = String(attempts);
+
+			if (guess > answer) {
+				feedback.textContent = "太大了，再试一个更小的数字。";
+				feedback.dataset.state = "high";
+			} else if (guess < answer) {
+				feedback.textContent = "太小了，再试一个更大的数字。";
+				feedback.dataset.state = "low";
+			} else {
+				finished = true;
+				feedback.textContent = `猜中了！答案就是 ${answer}，一共猜了 ${attempts} 次。`;
+				feedback.dataset.state = "won";
+				input.disabled = true;
+				submitButton.disabled = true;
+				restartButton.disabled = false;
+				restartButton.focus();
+			}
+
+			if (!finished) {
+				input.select();
+			}
+		});
+
+		restartButton.addEventListener("click", startGame);
+		startGame();
+	</script>
+</body>
+</html>
