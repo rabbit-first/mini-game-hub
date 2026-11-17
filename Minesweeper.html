@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#c0c0c0">
+	<title>扫雷 · Minesweeper</title>
+	<style>
+		:root {
+			color-scheme: light;
+			--win-gray: #c0c0c0;
+			--light-edge: #fff;
+			--mid-edge: #dfdfdf;
+			--dark-edge: #808080;
+			--deep-edge: #404040;
+			--lcd: #101010;
+			--digit: #f22;
+			--tile: 24px;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			min-width: 320px;
+			min-height: 100vh;
+			display: grid;
+			place-items: center;
+			margin: 0;
+			padding: 24px 12px;
+			background: #008080;
+			color: #111;
+			font-family: Tahoma, "Microsoft YaHei", sans-serif;
+			font-size: 13px;
+		}
+
+		button, select { font: inherit; }
+
+		.window {
+			width: min(100%, 850px);
+			padding: 5px;
+			border: 2px solid;
+			border-color: var(--light-edge) var(--deep-edge) var(--deep-edge) var(--light-edge);
+			background: var(--win-gray);
+			box-shadow: 2px 2px 0 rgb(0 0 0 / 35%);
+		}
+
+		.title-bar {
+			display: flex;
+			min-height: 28px;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			padding: 3px 5px 3px 8px;
+			background: #000080;
+			color: white;
+			font-size: 14px;
+			font-weight: 700;
+		}
+
+		.title-name { display: flex; align-items: center; gap: 7px; }
+		.app-icon { font-size: 15px; line-height: 1; }
+		.window-controls { display: flex; gap: 3px; }
+
+		.window-control {
+			width: 20px;
+			height: 19px;
+			display: grid;
+			place-items: center;
+			padding: 0;
+			border: 1px solid;
+			border-color: var(--light-edge) var(--deep-edge) var(--deep-edge) var(--light-edge);
+			background: var(--win-gray);
+			color: #111;
+			font-family: Arial, sans-serif;
+			font-size: 12px;
+			font-weight: 700;
+			line-height: 1;
+		}
+
+		.game-content { padding: 12px 10px 10px; }
+
+		.toolbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 9px;
+		}
+
+		.difficulty-label { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+
+		select {
+			min-height: 27px;
+			padding: 2px 24px 2px 7px;
+			border: 2px solid;
+			border-color: var(--dark-edge) var(--light-edge) var(--light-edge) var(--dark-edge);
+			border-radius: 0;
+			background: var(--light-edge);
+			color: #111;
+		}
+
+		.toolbar-button, .help-button {
+			min-height: 28px;
+			padding: 3px 9px;
+			border: 2px solid;
+			border-color: var(--light-edge) var(--dark-edge) var(--dark-edge) var(--light-edge);
+			border-radius: 0;
+			background: var(--win-gray);
+			color: #111;
+			cursor: pointer;
+		}
+
+		.toolbar-button:active, .help-button:active {
+			border-color: var(--dark-edge) var(--light-edge) var(--light-edge) var(--dark-edge);
+		}
+
+		.toolbar-button:focus-visible, .help-button:focus-visible, select:focus-visible {
+			outline: 1px dotted #111;
+			outline-offset: -5px;
+		}
+
+		.counter-panel {
+			display: grid;
+			grid-template-columns: 1fr 42px 1fr;
+			align-items: center;
+			gap: 9px;
+			min-height: 58px;
+			margin-bottom: 9px;
+			padding: 7px 8px;
+			border: 2px solid;
+			border-color: var(--dark-edge) var(--light-edge) var(--light-edge) var(--dark-edge);
+		}
+
+		.counter {
+			width: 70px;
+			min-height: 38px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 2px 4px;
+			overflow: hidden;
+			background: var(--lcd);
+			color: var(--digit);
+			font-family: "Courier New", monospace;
+			font-size: 31px;
+			font-weight: 700;
+			line-height: 1;
+			font-variant-numeric: tabular-nums;
+		}
+
+		.counter:last-child { justify-self: end; }
+
+		.face-button {
+			width: 38px;
+			height: 38px;
+			justify-self: center;
+			display: grid;
+			place-items: center;
+			padding: 0;
+			border: 2px solid;
+			border-color: var(--light-edge) var(--dark-edge) var(--dark-edge) var(--light-edge);
+			border-radius: 0;
+			background: var(--win-gray);
+			color: #111;
+			font-family: Arial, sans-serif;
+			font-size: 25px;
+			line-height: 1;
+			cursor: pointer;
+		}
+
+		.face-button:active {
+			border-color: var(--dark-edge) var(--light-edge) var(--light-edge) var(--dark-edge);
+			padding: 1px 0 0 1px;
+		}
+
+		.board-viewport {
+			max-width: 100%;
+			overflow: auto;
+			padding: 4px;
+			border: 2px solid;
+			border-color: var(--dark-edge) var(--light-edge) var(--light-edge) var(--dark-edge);
+			background: var(--win-gray);
+			overscroll-behavior: contain;
+		}
+
+		.board {
+			display: grid;
+			width: max-content;
+			user-select: none;
+			-webkit-user-select: none;
+		}
+
+		.cell {
+			position: relative;
+			width: var(--tile);
+			height: var(--tile);
+			display: grid;
+			place-items: center;
+			padding: 0;
+			border: 0;
+			border-radius: 0;
+			background: var(--win-gray);
+			color: #111;
+			font-family: "Arial", sans-serif;
+			font-size: 16px;
+			font-weight: 700;
+			line-height: 1;
+			cursor: default;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.cell.covered {
+			border: 2px solid;
+			border-color: var(--light-edge) var(--dark-edge) var(--dark-edge) var(--light-edge);
+		}
+
+		.cell.covered:hover { filter: brightness(1.05); }
+		.cell.revealed { border: 1px solid #929292; background: #c0c0c0; }
+		.cell.flagged { color: #e00000; }
+		.cell.mine-hit { background: #f00; }
+		.cell.wrong-flag { color: #e00000; }
+		.cell:focus-visible { z-index: 1; outline: 1px dotted #000; outline-offset: -4px; }
+		.cell[data-number="1"] { color: #0000ff; }
+		.cell[data-number="2"] { color: #008000; }
+		.cell[data-number="3"] { color: #ff0000; }
+		.cell[data-number="4"] { color: #000080; }
+		.cell[data-number="5"] { color: #800000; }
+		.cell[data-number="6"] { color: #008080; }
+		.cell[data-number="7"] { color: #111; }
+		.cell[data-number="8"] { color: #777; }
+
+		.status-line {
+			display: flex;
+			justify-content: space-between;
+			gap: 12px;
+			margin-top: 8px;
+			color: #333;
+			font-size: 12px;
+		}
+
+		.hint { margin: 5px 0 0; color: #444; font-size: 11px; }
+
+		.help-button {
+			min-height: 23px;
+			padding: 1px 7px;
+			font-size: 12px;
+		}
+
+		@media (max-width: 480px) {
+			body { place-items: start center; padding: 10px 6px; }
+			.window { padding: 4px; }
+			.game-content { padding: 9px 6px 7px; }
+			.toolbar { gap: 6px; }
+			.difficulty-label { gap: 4px; font-size: 12px; }
+			select { max-width: 132px; padding-left: 4px; font-size: 12px; }
+			.toolbar-button { padding-inline: 6px; font-size: 12px; }
+			.counter-panel { grid-template-columns: 1fr 38px 1fr; gap: 5px; }
+			.counter { width: 63px; font-size: 28px; }
+			.board-viewport { padding: 3px; }
+			.hint { line-height: 1.5; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { scroll-behavior: auto !important; }
+		}
+	</style>
+</head>
+<body>
+	<main class="window" aria-label="扫雷游戏窗口">
+		<header class="title-bar">
+			<span class="title-name"><span class="app-icon" aria-hidden="true">▦</span>扫雷</span>
+			<div class="window-controls" aria-hidden="true">
+				<span class="window-control">_</span>
+				<span class="window-control">□</span>
+				<span class="window-control">×</span>
+			</div>
+		</header>
+
+		<section class="game-content" aria-label="游戏区域">
+			<div class="toolbar">
+				<label class="difficulty-label" for="difficulty">
+					难度
+					<select id="difficulty" aria-label="选择游戏难度">
+						<option value="beginner">初级 9×9 · 10 雷</option>
+						<option value="intermediate">中级 16×16 · 40 雷</option>
+						<option value="expert">高级 30×16 · 99 雷</option>
+					</select>
+				</label>
+				<button id="new-game" class="toolbar-button" type="button">新游戏</button>
+			</div>
+
+			<div class="counter-panel">
+				<div id="mine-counter" class="counter" role="status" aria-label="剩余地雷">010</div>
+				<button id="face" class="face-button" type="button" aria-label="重新开始">☺</button>
+				<div id="timer" class="counter" role="timer" aria-label="游戏用时">000</div>
+			</div>
+
+			<div class="board-viewport">
+				<div id="board" class="board" role="grid" aria-label="扫雷棋盘"></div>
+			</div>
+
+			<div class="status-line">
+				<span id="status" role="status" aria-live="polite">左键翻开方格，右键插旗。</span>
+				<button id="help" class="help-button" type="button" aria-label="查看玩法说明">帮助</button>
+			</div>
+			<p class="hint">提示：高级棋盘可横向滚动。首次翻开的方格不会有雷。</p>
+		</section>
+	</main>
+
+	<script>
+		"use strict";
+
+		/**
+		 * 扫雷游戏控制器：负责棋盘数据、交互、计时及胜负状态。
+		 */
+		class Minesweeper {
+			constructor() {
+				// 三种经典难度，宽度按列数、高度按行数计算。
+				this.levels = {
+					beginner: { rows: 9, cols: 9, mines: 10 },
+					intermediate: { rows: 16, cols: 16, mines: 40 },
+					expert: { rows: 16, cols: 30, mines: 99 }
+				};
+
+				// 缓存常用的页面元素，避免反复查询 DOM。
+				this.boardElement = document.querySelector("#board");
+				this.difficultySelect = document.querySelector("#difficulty");
+				this.mineCounter = document.querySelector("#mine-counter");
+				this.timerElement = document.querySelector("#timer");
+				this.faceButton = document.querySelector("#face");
+				this.statusElement = document.querySelector("#status");
+
+				this.difficultySelect.addEventListener("change", () => this.newGame());
+				document.querySelector("#new-game").addEventListener("click", () => this.newGame());
+				this.faceButton.addEventListener("click", () => this.newGame());
+				document.querySelector("#help").addEventListener("click", () => {
+					window.alert("左键翻开方格，右键插旗或取消旗帜。数字表示周围 8 格的地雷数。找出全部安全格即可获胜；首次翻开不会踩到地雷。");
+				});
+
+				this.newGame();
+			}
+
+			/** 根据当前难度初始化新的一局。 */
+			newGame() {
+				const level = this.levels[this.difficultySelect.value];
+				this.rows = level.rows;
+				this.cols = level.cols;
+				this.mineTotal = level.mines;
+				this.board = [];
+				this.cells = [];
+				this.flags = 0;
+				this.revealedCount = 0;
+				this.started = false;
+				this.finished = false;
+				this.elapsedSeconds = 0;
+
+				if (this.timerInterval) {
+					window.clearInterval(this.timerInterval);
+					this.timerInterval = null;
+				}
+
+				this.faceButton.textContent = "☺";
+				this.statusElement.textContent = "左键翻开方格，右键插旗。";
+				this.renderCounter(this.mineCounter, this.mineTotal);
+				this.renderCounter(this.timerElement, 0);
+				this.createBoard();
+			}
+
+			/** 建立空棋盘，并为每个格子注册鼠标和键盘交互。 */
+			createBoard() {
+				this.boardElement.replaceChildren();
+				this.boardElement.style.gridTemplateColumns = `repeat(${this.cols}, var(--tile))`;
+				this.boardElement.setAttribute("aria-label", `扫雷棋盘，${this.cols} 列，${this.rows} 行`);
+
+				for (let row = 0; row < this.rows; row += 1) {
+					this.board[row] = [];
+					for (let col = 0; col < this.cols; col += 1) {
+						const cell = {
+							mine: false,
+							number: 0,
+							revealed: false,
+							flagged: false,
+							element: document.createElement("button")
+						};
+
+						const button = cell.element;
+						button.type = "button";
+						button.className = "cell covered";
+						button.setAttribute("role", "gridcell");
+						button.setAttribute("aria-label", `第 ${row + 1} 行，第 ${col + 1} 列，未翻开`);
+						button.dataset.row = String(row);
+						button.dataset.col = String(col);
+						button.addEventListener("click", () => this.reveal(row, col));
+						button.addEventListener("contextmenu", (event) => {
+							event.preventDefault();
+							this.toggleFlag(row, col);
+						});
+						button.addEventListener("mousedown", (event) => {
+							if (event.button === 0 && !this.finished) this.faceButton.textContent = "⊙";
+						});
+						button.addEventListener("mouseup", () => {
+							if (!this.finished) this.faceButton.textContent = "☺";
+						});
+
+						this.board[row][col] = cell;
+						this.cells.push(cell);
+						this.boardElement.append(button);
+					}
+				}
+			}
+
+			/** 计算某格周围所有合法的相邻坐标。 */
+			getNeighbors(row, col) {
+				const neighbors = [];
+				for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
+					for (let colOffset = -1; colOffset <= 1; colOffset += 1) {
+						if (rowOffset === 0 && colOffset === 0) continue;
+						const nextRow = row + rowOffset;
+						const nextCol = col + colOffset;
+						if (nextRow >= 0 && nextRow < this.rows && nextCol >= 0 && nextCol < this.cols) {
+							neighbors.push([nextRow, nextCol]);
+						}
+					}
+				}
+				return neighbors;
+			}
+
+			/** 首次翻格后才布雷，并从候选位置中排除首次点击的位置。 */
+			placeMines(safeRow, safeCol) {
+				const candidates = [];
+				for (let row = 0; row < this.rows; row += 1) {
+					for (let col = 0; col < this.cols; col += 1) {
+						if (row !== safeRow || col !== safeCol) candidates.push([row, col]);
+					}
+				}
+
+				// Fisher-Yates 洗牌，保证从候选格中随机选取地雷。
+				for (let index = candidates.length - 1; index > 0; index -= 1) {
+					const swapIndex = Math.floor(Math.random() * (index + 1));
+					[candidates[index], candidates[swapIndex]] = [candidates[swapIndex], candidates[index]];
+				}
+
+				for (let index = 0; index < this.mineTotal; index += 1) {
+					const [row, col] = candidates[index];
+					this.board[row][col].mine = true;
+				}
+
+				// 地雷放置完成后，预先统计每个安全格周围的地雷数。
+				for (let row = 0; row < this.rows; row += 1) {
+					for (let col = 0; col < this.cols; col += 1) {
+						const cell = this.board[row][col];
+						if (!cell.mine) {
+							cell.number = this.getNeighbors(row, col)
+								.filter(([neighborRow, neighborCol]) => this.board[neighborRow][neighborCol].mine)
+								.length;
+						}
+					}
+				}
+			}
+
+			/** 首次点击启动计时，并确保被点击的格子不是地雷。 */
+			startGame(row, col) {
+				this.placeMines(row, col);
+				this.started = true;
+				this.timerInterval = window.setInterval(() => {
+					this.elapsedSeconds = Math.min(999, this.elapsedSeconds + 1);
+					this.renderCounter(this.timerElement, this.elapsedSeconds);
+				}, 1000);
+			}
+
+			/** 左键翻格；数字为零时递归展开相邻安全格。 */
+			reveal(row, col) {
+				if (this.finished) return;
+				const cell = this.board[row][col];
+				if (cell.revealed || cell.flagged) return;
+				if (!this.started) this.startGame(row, col);
+
+				if (cell.mine) {
+					this.endGame(false, cell);
+					return;
+				}
+
+				this.revealCell(row, col);
+				if (this.revealedCount === this.rows * this.cols - this.mineTotal) {
+					this.endGame(true);
+				}
+			}
+
+			/** 翻开单格，并使用队列展开相连的空白区域。 */
+			revealCell(row, col) {
+				const firstCell = this.board[row][col];
+				if (firstCell.revealed || firstCell.flagged || firstCell.mine) return;
+
+				const queue = [[row, col]];
+				let queueIndex = 0;
+
+				while (queueIndex < queue.length) {
+					const [currentRow, currentCol] = queue[queueIndex];
+					queueIndex += 1;
+					const cell = this.board[currentRow][currentCol];
+					if (cell.revealed || cell.flagged || cell.mine) continue;
+
+					cell.revealed = true;
+					this.revealedCount += 1;
+					cell.element.classList.remove("covered");
+					cell.element.classList.add("revealed");
+					cell.element.setAttribute("aria-label", this.getCellLabel(currentRow, currentCol, cell));
+
+					if (cell.number > 0) {
+						cell.element.textContent = String(cell.number);
+						cell.element.dataset.number = String(cell.number);
+					} else {
+						// 零数字格周围都没有雷，可以安全地继续展开邻格。
+						for (const [neighborRow, neighborCol] of this.getNeighbors(currentRow, currentCol)) {
+							const neighbor = this.board[neighborRow][neighborCol];
+							if (!neighbor.revealed && !neighbor.flagged && !neighbor.mine) {
+								queue.push([neighborRow, neighborCol]);
+							}
+						}
+					}
+				}
+			}
+
+			/** 右键切换旗帜，并同步剩余地雷数显示。 */
+			toggleFlag(row, col) {
+				if (this.finished) return;
+				const cell = this.board[row][col];
+				if (cell.revealed) return;
+
+				cell.flagged = !cell.flagged;
+				this.flags += cell.flagged ? 1 : -1;
+				cell.element.classList.toggle("flagged", cell.flagged);
+				cell.element.textContent = cell.flagged ? "⚑" : "";
+				cell.element.setAttribute("aria-label", this.getCellLabel(row, col, cell));
+				this.renderCounter(this.mineCounter, this.mineTotal - this.flags);
+			}
+
+			/** 根据棋格当前内容生成屏幕阅读器使用的中文标签。 */
+			getCellLabel(row, col, cell) {
+				const position = `第 ${row + 1} 行，第 ${col + 1} 列`;
+				if (cell.flagged) return `${position}，已插旗`;
+				if (!cell.revealed) return `${position}，未翻开`;
+				if (cell.mine) return `${position}，地雷`;
+				if (cell.number > 0) return `${position}，周围有 ${cell.number} 颗地雷`;
+				return `${position}，空白`;
+			}
+
+			/** 结束游戏，显示结果并停止计时。 */
+			endGame(won, hitCell = null) {
+				this.finished = true;
+				if (this.timerInterval) {
+					window.clearInterval(this.timerInterval);
+					this.timerInterval = null;
+				}
+
+				if (won) {
+					this.faceButton.textContent = "★";
+					this.statusElement.textContent = "恭喜你，找出了所有安全格！";
+					// 胜利后自动标出剩余地雷，并将剩余计数归零。
+					this.board.forEach((row, rowIndex) => row.forEach((cell, colIndex) => {
+						if (cell.mine && !cell.flagged) {
+							cell.flagged = true;
+							cell.element.classList.add("flagged");
+							cell.element.textContent = "⚑";
+							cell.element.setAttribute("aria-label", `第 ${rowIndex + 1} 行，第 ${colIndex + 1} 列，已插旗`);
+						}
+					}));
+					this.renderCounter(this.mineCounter, 0);
+					window.alert(`恭喜获胜！用时 ${this.elapsedSeconds} 秒。`);
+					return;
+				}
+
+				this.faceButton.textContent = "☹";
+				this.statusElement.textContent = "游戏结束，你踩到了地雷。";
+				this.board.forEach((row, rowIndex) => row.forEach((cell, colIndex) => {
+					if (cell.mine) {
+						cell.element.classList.remove("covered");
+						cell.element.classList.add("revealed");
+						cell.element.textContent = "✹";
+						cell.element.setAttribute("aria-label", `第 ${rowIndex + 1} 行，第 ${colIndex + 1} 列，地雷`);
+					} else if (cell.flagged) {
+						cell.element.classList.add("wrong-flag");
+						cell.element.textContent = "⚑×";
+					}
+				}));
+
+				if (hitCell) hitCell.element.classList.add("mine-hit");
+				window.alert("砰！你踩到了地雷。游戏结束。点击笑脸重新开始。");
+			}
+
+			/** 以三位数码形式显示计数，支持插旗过量时显示负数。 */
+			renderCounter(element, value) {
+				const isNegative = value < 0;
+				const digits = String(Math.min(999, Math.abs(value))).padStart(3, "0");
+				element.textContent = isNegative ? `-${digits.slice(1)}` : digits;
+			}
+		}
+
+		// 创建游戏实例，后续操作均由该对象负责。
+		new Minesweeper();
+	</script>
+</body>
+</html>
