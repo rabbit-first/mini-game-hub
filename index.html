@@ -635,6 +635,10 @@
 			startGame(gameId) {
 				const game = this.games.find((item) => item.id === gameId);
 				if (!game) return;
+				if (window.matchMedia("(max-width: 760px)").matches) {
+					window.location.assign(game.source);
+					return;
+				}
 
 				this.activeGameName.textContent = `${game.title} · ${game.localizedTitle}`;
 				this.gameFrame.title = game.title;
