@@ -21,6 +21,22 @@
 
 		* { box-sizing: border-box; }
 
+		.home-link {
+			display: none;
+			min-height: 40px;
+			align-items: center;
+			gap: 8px;
+			margin: 0 auto 12px;
+			padding: 0 11px;
+			border: 1px solid #bfd0c5;
+			border-radius: 5px;
+			background: var(--panel);
+			color: var(--green-deep);
+			font-size: 13px;
+			font-weight: 700;
+			text-decoration: none;
+		}
+
 		a {
 			text-decoration: none;
 			color: #464feb;
@@ -285,6 +301,7 @@
 
 		@media (max-width: 720px) {
 			body { padding: 25px 14px; }
+			.home-link { display: flex; width: fit-content; }
 			.game-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
 			.board-panel { padding: 14px 10px; }
 			.board-wrap { padding: 8px; }
@@ -312,6 +329,7 @@
 	</style>
 </head>
 <body>
+	<a class="home-link" href="index.html">← 返回游戏菜单</a>
 	<main class="page">
 		<header class="page-header">
 			<div>
