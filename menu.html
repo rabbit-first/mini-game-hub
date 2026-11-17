@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#f2f5ee">
+	<title>Mini Game Hub</title>
+	<style>
+		:root {
+			color-scheme: light;
+			--ink: #173a32;
+			--muted: #62746d;
+			--paper: #f2f5ee;
+			--white: #fffefa;
+			--line: #dce5dc;
+			--forest: #174b3c;
+			--forest-deep: #10392f;
+			--lime: #dff36d;
+			--coral: #f47e62;
+			--aqua: #9cddd1;
+			--shadow: 0 15px 38px rgb(23 58 50 / 9%);
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			min-width: 320px;
+			min-height: 100vh;
+			margin: 0;
+			color: var(--ink);
+			background-color: var(--paper);
+			background-image: radial-gradient(#cbd8cc 0.8px, transparent 0.8px);
+			background-size: 19px 19px;
+			font-family: "Trebuchet MS", "Microsoft YaHei", sans-serif;
+		}
+
+		button { font: inherit; }
+
+		.site-shell {
+			width: min(100% - 48px, 1120px);
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			margin: 0 auto;
+		}
+
+		.site-header {
+			min-height: 76px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 20px;
+			border-bottom: 1px solid rgb(23 58 50 / 13%);
+		}
+
+		.brand {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			color: var(--ink);
+			font-size: 16px;
+			font-weight: 800;
+			text-decoration: none;
+		}
+
+		.brand-mark {
+			width: 30px;
+			height: 30px;
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 3px;
+			padding: 4px;
+			border-radius: 6px;
+			background: var(--forest);
+			transform: rotate(-5deg);
+		}
+
+		.brand-mark span { border-radius: 2px; background: var(--lime); }
+		.brand-mark span:nth-child(2) { background: var(--coral); }
+		.brand-mark span:nth-child(3) { background: var(--aqua); }
+		.brand-mark span:nth-child(4) { background: var(--white); }
+
+		.header-note {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			color: var(--muted);
+			font-size: 12px;
+			font-weight: 700;
+		}
+
+		.online-dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: #4a9b70;
+			box-shadow: 0 0 0 3px #dcefe1;
+		}
+
+		main { flex: 1; }
+
+		.home-view { padding: 48px 0 40px; }
+
+		.intro-row {
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-between;
+			gap: 24px;
+			margin-bottom: 28px;
+		}
+
+		.eyebrow {
+			margin: 0 0 12px;
+			color: var(--forest);
+			font-size: 11px;
+			font-weight: 800;
+			letter-spacing: 1.8px;
+		}
+
+		h1 {
+			margin: 0;
+			font-family: Georgia, "Songti SC", serif;
+			font-size: clamp(42px, 7vw, 68px);
+			line-height: .98;
+			letter-spacing: 0;
+		}
+
+		.intro-copy {
+			max-width: 310px;
+			margin: 0 0 3px;
+			color: var(--muted);
+			font-size: 14px;
+			line-height: 1.7;
+		}
+
+		.section-heading {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+			margin-bottom: 14px;
+		}
+
+		.section-heading h2 { margin: 0; font-size: 16px; }
+
+		.section-count {
+			color: var(--muted);
+			font-size: 12px;
+			font-weight: 700;
+		}
+
+		.game-grid {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 16px;
+		}
+
+		.game-card {
+			min-width: 0;
+			overflow: hidden;
+			border: 1px solid var(--line);
+			border-radius: 7px;
+			background: var(--white);
+			box-shadow: 0 3px 12px rgb(23 58 50 / 4%);
+			animation: rise-in 420ms ease both;
+		}
+
+		.game-card:nth-child(2) { animation-delay: 65ms; }
+		.game-card:nth-child(3) { animation-delay: 130ms; }
+
+		.artwork {
+			position: relative;
+			height: 156px;
+			display: grid;
+			place-items: center;
+			overflow: hidden;
+		}
+
+		.artwork.guess { background: var(--lime); }
+		.artwork.gomoku { background: var(--coral); }
+		.artwork.minesweeper { background: #74cbb9; }
+
+		.artwork-label {
+			position: absolute;
+			top: 13px;
+			left: 14px;
+			color: rgb(23 58 50 / 64%);
+			font-size: 10px;
+			font-weight: 800;
+			letter-spacing: 1.4px;
+		}
+
+		.number-art {
+			position: relative;
+			width: 100px;
+			height: 88px;
+			display: grid;
+			place-items: center;
+			border: 2px solid var(--forest);
+			border-radius: 7px;
+			background: var(--white);
+			color: var(--forest);
+			font-family: Georgia, serif;
+			font-size: 55px;
+			font-weight: 700;
+			line-height: 1;
+			box-shadow: 6px 6px 0 rgb(23 58 50 / 17%);
+			transform: rotate(-5deg);
+		}
+
+		.number-art::before, .number-art::after {
+			position: absolute;
+			width: 13px;
+			height: 13px;
+			border: 2px solid var(--forest);
+			border-radius: 50%;
+			background: var(--coral);
+			content: "";
+		}
+
+		.number-art::before { top: -12px; right: -15px; }
+		.number-art::after { bottom: -11px; left: -14px; background: var(--aqua); }
+
+		.gomoku-art {
+			width: 122px;
+			height: 98px;
+			position: relative;
+			border: 1px solid rgb(65 47 29 / 25%);
+			background-color: #eecb83;
+			background-image:
+				linear-gradient(rgb(89 63 32 / 62%) 1px, transparent 1px),
+				linear-gradient(90deg, rgb(89 63 32 / 62%) 1px, transparent 1px);
+			background-size: 24px 24px;
+			box-shadow: 5px 5px 0 rgb(23 58 50 / 16%);
+			transform: rotate(3deg);
+		}
+
+		.gomoku-stone {
+			position: absolute;
+			width: 19px;
+			height: 19px;
+			border: 1px solid #222;
+			border-radius: 50%;
+			background: radial-gradient(circle at 35% 30%, #626866, #151918 75%);
+			box-shadow: 1px 2px 2px rgb(0 0 0 / 23%);
+		}
+
+		.gomoku-stone.white {
+			border-color: #bebeb5;
+			background: radial-gradient(circle at 35% 30%, #fff, #deded5 80%);
+		}
+
+		.gomoku-stone.one { top: 27px; left: 26px; }
+		.gomoku-stone.two { top: 27px; left: 50px; }
+		.gomoku-stone.three { top: 27px; left: 74px; }
+		.gomoku-stone.four { top: 51px; left: 50px; }
+
+		.mine-art {
+			width: 138px;
+			height: 96px;
+			display: grid;
+			grid-template-columns: repeat(5, 1fr);
+			gap: 4px;
+			padding: 8px;
+			border: 2px solid #d6e5de;
+			background: #285d4f;
+			box-shadow: 5px 5px 0 rgb(23 58 50 / 17%);
+			transform: rotate(-3deg);
+		}
+
+		.mine-tile {
+			display: grid;
+			place-items: center;
+			border: 2px solid;
+			border-color: #fff #7b8e86 #7b8e86 #fff;
+			background: #c4cdc8;
+			color: #173a32;
+			font-size: 14px;
+			font-weight: 800;
+		}
+
+		.mine-tile.open { border: 1px solid #8da49a; background: #dce6e0; color: #df563f; }
+		.mine-tile.marked { color: #d74737; }
+
+		.card-body { padding: 17px 17px 16px; }
+
+		.card-meta {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 10px;
+			margin-bottom: 8px;
+		}
+
+		.game-number { color: #829089; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+
+		.game-type {
+			padding: 4px 7px;
+			border-radius: 3px;
+			background: #eff4eb;
+			color: var(--forest);
+			font-size: 10px;
+			font-weight: 700;
+		}
+
+		.card-body h3 { margin: 0; font-size: 19px; line-height: 1.3; }
+		.localized-name { margin-left: 6px; color: var(--muted); font-size: 13px; font-weight: 500; }
+
+		.description {
+			min-height: 42px;
+			margin: 8px 0 15px;
+			color: var(--muted);
+			font-size: 12px;
+			line-height: 1.7;
+		}
+
+		.play-button {
+			width: 100%;
+			min-height: 42px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 12px;
+			border: 1px solid var(--forest);
+			border-radius: 4px;
+			background: var(--forest);
+			color: white;
+			font-size: 13px;
+			font-weight: 700;
+			cursor: pointer;
+			transition: background-color 140ms ease, transform 140ms ease;
+		}
+
+		.play-button:hover { background: var(--forest-deep); }
+		.play-button:active { transform: translateY(1px); }
+		.play-arrow { font-size: 17px; font-weight: 400; }
+		button:focus-visible, a:focus-visible { outline: 3px solid #e28352; outline-offset: 3px; }
+
+		.coming-section { margin-top: 31px; }
+
+		.coming-heading {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin: 0 0 11px;
+			font-size: 13px;
+		}
+
+		.coming-heading::after { height: 1px; flex: 1; background: var(--line); content: ""; }
+
+		.coming-list { display: flex; flex-wrap: wrap; gap: 9px; }
+
+		.coming-item {
+			min-height: 37px;
+			display: inline-flex;
+			align-items: center;
+			gap: 9px;
+			padding: 0 11px;
+			border: 1px dashed #b9c9bd;
+			border-radius: 4px;
+			background: rgb(255 254 250 / 65%);
+			color: #51655b;
+			font-size: 12px;
+		}
+
+		.coming-item strong { color: var(--ink); font-size: 12px; }
+		.coming-label { color: #849188; font-size: 10px; }
+
+		.site-footer {
+			min-height: 54px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 14px;
+			border-top: 1px solid rgb(23 58 50 / 13%);
+			color: var(--muted);
+			font-size: 11px;
+		}
+
+		.game-view { padding: 18px 0 22px; }
+		.game-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+		.back-button {
+			min-height: 40px;
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 0 12px;
+			border: 1px solid #c8d6cc;
+			border-radius: 4px;
+			background: var(--white);
+			color: var(--ink);
+			font-size: 13px;
+			font-weight: 700;
+			cursor: pointer;
+		}
+
+		.back-button:hover { background: #eaf1e9; }
+		.active-game-name { color: var(--muted); font-size: 13px; font-weight: 700; }
+
+		.game-frame {
+			width: 100%;
+			height: min(850px, max(620px, calc(100vh - 150px)));
+			display: block;
+			border: 1px solid #d1dcd3;
+			border-radius: 5px;
+			background: var(--white);
+			box-shadow: var(--shadow);
+		}
+
+		[hidden] { display: none !important; }
+
+		@keyframes rise-in {
+			from { opacity: 0; transform: translateY(9px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
+
+		@media (max-width: 760px) {
+			.site-shell { width: min(100% - 32px, 620px); }
+			.home-view { padding-top: 36px; }
+			.intro-row { align-items: flex-start; flex-direction: column; gap: 13px; margin-bottom: 24px; }
+			.intro-copy { max-width: 440px; }
+			.game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+			.game-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+			.game-card:last-child:nth-child(odd) .artwork { height: 140px; }
+		}
+
+		@media (max-width: 520px) {
+			.site-shell { width: min(100% - 24px, 420px); }
+			.site-header { min-height: 64px; }
+			.brand { font-size: 14px; }
+			.header-note { font-size: 10px; }
+			.home-view { padding: 30px 0 28px; }
+			h1 { font-size: clamp(40px, 13vw, 56px); }
+			.intro-copy { font-size: 13px; }
+			.game-grid { grid-template-columns: 1fr; gap: 12px; }
+			.game-card:last-child:nth-child(odd) { grid-column: auto; }
+			.artwork, .game-card:last-child:nth-child(odd) .artwork { height: 144px; }
+			.description { min-height: 0; }
+			.coming-section { margin-top: 25px; }
+			.site-footer { min-height: 48px; }
+			.game-frame { height: max(680px, calc(100vh - 132px)); }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+		}
+	</style>
+</head>
+<body>
+	<div class="site-shell">
+		<header class="site-header">
+			<a class="brand" href="#home" id="brand-link" aria-label="返回 Mini Game Hub 首页">
+				<span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+				<span>Mini Game Hub</span>
+			</a>
+			<div class="header-note"><span class="online-dot" aria-hidden="true"></span><span id="available-count">3 GAMES READY</span></div>
+		</header>
+
+		<main>
+			<section id="home-view" class="home-view" aria-labelledby="page-title">
+				<div class="intro-row">
+					<div>
+						<p class="eyebrow">A LITTLE PLAY BREAK</p>
+						<h1 id="page-title">Mini Game Hub</h1>
+					</div>
+					<p class="intro-copy">挑一款小游戏，开始你的下一局。所有游戏都在本地运行，随时可以回到这里。</p>
+				</div>
+
+				<section aria-labelledby="games-title">
+					<div class="section-heading">
+						<h2 id="games-title">选择游戏</h2>
+						<span class="section-count" id="game-count">03 TITLES</span>
+					</div>
+					<div id="game-grid" class="game-grid"></div>
+				</section>
+
+				<section class="coming-section" aria-labelledby="coming-title">
+					<h2 id="coming-title" class="coming-heading">Coming Soon</h2>
+					<div id="coming-list" class="coming-list"></div>
+				</section>
+			</section>
+
+			<section id="game-view" class="game-view" aria-label="小游戏">
+				<div class="game-toolbar">
+					<button id="back-button" class="back-button" type="button"><span aria-hidden="true">←</span>返回主菜单</button>
+					<span id="active-game-name" class="active-game-name"></span>
+				</div>
+				<iframe id="game-frame" class="game-frame" title="小游戏画面" loading="eager"></iframe>
+			</section>
+		</main>
+
+		<footer class="site-footer">
+			<span>Mini Game Hub</span>
+			<span>VERSION 1.0.0</span>
+		</footer>
+	</div>
+
+	<script>
+		"use strict";
+
+		// 游戏注册表：新增游戏时只需在此添加名称、说明、入口和卡片视觉类型。
+		const GAME_REGISTRY = [
+			{
+				id: "guess-number",
+				title: "Guess the Number",
+				localizedTitle: "猜数字",
+				description: "猜出 1 到 100 之间的隐藏数字，看看你需要几次。",
+				category: "单人 · 逻辑",
+				source: "Guess_the_number.html",
+				artwork: "guess",
+				artLabel: "NUMBER / 01"
+			},
+			{
+				id: "gomoku",
+				title: "Gomoku",
+				localizedTitle: "五子棋",
+				description: "与朋友轮流落子，率先连成五子的一方获胜。",
+				category: "双人 · 策略",
+				source: "Gomoku.html",
+				artwork: "gomoku",
+				artLabel: "STRATEGY / 02"
+			},
+			{
+				id: "minesweeper",
+				title: "Minesweeper",
+				localizedTitle: "扫雷",
+				description: "根据数字推理雷区位置，小心翻开每一格。",
+				category: "单人 · 推理",
+				source: "Minesweeper.html",
+				artwork: "minesweeper",
+				artLabel: "PUZZLE / 03"
+			}
+		];
+
+		// 未来游戏占位信息与当前游戏注册表分开，避免未完成的入口误启动。
+		const COMING_SOON = [
+			{ title: "Snake", localizedTitle: "贪吃蛇" },
+			{ title: "Tetris", localizedTitle: "俄罗斯方块" },
+			{ title: "Sudoku", localizedTitle: "数独" }
+		];
+
+		/** 管理游戏卡片、页面切换和游戏 iframe 的统一入口。 */
+		class MiniGameHub {
+			constructor(games, comingSoon) {
+				this.games = games;
+				this.comingSoon = comingSoon;
+				this.homeView = document.querySelector("#home-view");
+				this.gameView = document.querySelector("#game-view");
+				this.gameGrid = document.querySelector("#game-grid");
+				this.gameFrame = document.querySelector("#game-frame");
+				this.activeGameName = document.querySelector("#active-game-name");
+
+				this.renderGameCards();
+				this.renderComingSoon();
+				this.updateGameCount();
+				document.querySelector("#back-button").addEventListener("click", () => this.showHome());
+				document.querySelector("#brand-link").addEventListener("click", (event) => {
+					event.preventDefault();
+					this.showHome();
+				});
+				window.addEventListener("keydown", (event) => this.handleEscape(event));
+				this.showHome();
+			}
+
+			/** 由注册表自动生成所有可玩的游戏卡片。 */
+			renderGameCards() {
+				this.gameGrid.replaceChildren();
+
+				this.games.forEach((game, index) => {
+					const card = document.createElement("article");
+					card.className = "game-card";
+					card.innerHTML = `
+						<div class="artwork ${game.artwork}" aria-hidden="true">
+							<span class="artwork-label">${game.artLabel}</span>
+							${this.getArtworkMarkup(game.artwork)}
+						</div>
+						<div class="card-body">
+							<div class="card-meta">
+								<span class="game-number">GAME 0${index + 1}</span>
+								<span class="game-type">${game.category}</span>
+							</div>
+							<h3>${game.title}<span class="localized-name">${game.localizedTitle}</span></h3>
+							<p class="description">${game.description}</p>
+							<button class="play-button" type="button" data-game-id="${game.id}">
+								<span>开始游戏</span><span class="play-arrow" aria-hidden="true">↗</span>
+							</button>
+						</div>`;
+
+					card.querySelector(".play-button").addEventListener("click", () => this.startGame(game.id));
+					this.gameGrid.append(card);
+				});
+			}
+
+			/** 根据游戏类型返回卡片顶部的小型 CSS 插画。 */
+			getArtworkMarkup(type) {
+				if (type === "guess") return '<div class="number-art">?</div>';
+				if (type === "gomoku") {
+					return `<div class="gomoku-art">
+						<span class="gomoku-stone one"></span>
+						<span class="gomoku-stone two white"></span>
+						<span class="gomoku-stone three"></span>
+						<span class="gomoku-stone four white"></span>
+					</div>`;
+				}
+
+				return `<div class="mine-art" aria-hidden="true">
+					<span class="mine-tile open">1</span><span class="mine-tile"> </span><span class="mine-tile marked">⚑</span><span class="mine-tile"> </span><span class="mine-tile open">2</span>
+					<span class="mine-tile"> </span><span class="mine-tile open">1</span><span class="mine-tile"> </span><span class="mine-tile"> </span><span class="mine-tile marked">✹</span>
+					<span class="mine-tile open">1</span><span class="mine-tile"> </span><span class="mine-tile open">2</span><span class="mine-tile"> </span><span class="mine-tile"> </span>
+				</div>`;
+			}
+
+			/** 由占位注册信息生成暂未开放的游戏入口。 */
+			renderComingSoon() {
+				const list = document.querySelector("#coming-list");
+				list.replaceChildren();
+
+				this.comingSoon.forEach((game) => {
+					const item = document.createElement("div");
+					item.className = "coming-item";
+					item.setAttribute("aria-label", `${game.title}，${game.localizedTitle}，即将推出`);
+					item.innerHTML = `<strong>${game.title}</strong><span>${game.localizedTitle}</span><span class="coming-label">SOON</span>`;
+					list.append(item);
+				});
+			}
+
+			/** 更新顶部可玩游戏数和列表标题中的数量。 */
+			updateGameCount() {
+				const count = String(this.games.length).padStart(2, "0");
+				document.querySelector("#available-count").textContent = `${this.games.length} GAMES READY`;
+				document.querySelector("#game-count").textContent = `${count} TITLES`;
+			}
+
+			/** 根据游戏 ID 从注册表中查找页面并切换到游戏视图。 */
+			startGame(gameId) {
+				const game = this.games.find((item) => item.id === gameId);
+				if (!game) return;
+
+				this.activeGameName.textContent = `${game.title} · ${game.localizedTitle}`;
+				this.gameFrame.title = game.title;
+				this.gameFrame.src = game.source;
+				this.homeView.hidden = true;
+				this.gameView.hidden = false;
+				window.scrollTo({ top: 0, behavior: "auto" });
+			}
+
+			/** 关闭当前游戏视图并返回主菜单。 */
+			showHome() {
+				this.gameView.hidden = true;
+				this.homeView.hidden = false;
+				this.gameFrame.removeAttribute("src");
+				this.activeGameName.textContent = "";
+				window.scrollTo({ top: 0, behavior: "auto" });
+			}
+
+			/** Escape 键提供快捷返回，鼠标用户也可使用显式返回按钮。 */
+			handleEscape(event) {
+				if (event.key === "Escape" && !this.gameView.hidden) this.showHome();
+			}
+		}
+
+		// 初始化菜单；主菜单逻辑只依赖注册表，不依赖单个游戏的实现。
+		new MiniGameHub(GAME_REGISTRY, COMING_SOON);
+	</script>
+</body>
+</html>
